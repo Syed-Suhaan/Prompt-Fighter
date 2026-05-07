@@ -467,6 +467,25 @@ function LandingScreen({ onStart, onMuseum }: { onStart: () => void; onMuseum: (
   const heroEnemy = levels[1];
   return (
     <section className="landing-screen">
+      <section className="research-band research-band-top" aria-label="Research basis">
+        <div className="section-intro">
+          <p className="eyebrow">What it is based on</p>
+          <h2>A fighting-game wrapper around a real agent security problem.</h2>
+          <p>
+            The core idea comes from research showing that LLM apps and tool-using agents can be steered by untrusted content they retrieve: webpages, documents, repo files, package metadata, tool outputs, and issue comments.
+          </p>
+        </div>
+        <div className="research-grid">
+          {researchLinks.map((item) => (
+            <a href={item.href} key={item.href} target="_blank" rel="noreferrer">
+              <span>{item.title}</span>
+              <strong>{item.paper}</strong>
+              <small>{item.detail}</small>
+            </a>
+          ))}
+        </div>
+      </section>
+
       <div className="hero-band">
         <div className="hero-copy">
           <p className="eyebrow">Playable AI security research</p>
@@ -500,25 +519,6 @@ function LandingScreen({ onStart, onMuseum }: { onStart: () => void; onMuseum: (
           </div>
         </div>
       </div>
-
-      <section className="research-band" aria-label="Research basis">
-        <div className="section-intro">
-          <p className="eyebrow">What it is based on</p>
-          <h2>A fighting-game wrapper around a real agent security problem.</h2>
-          <p>
-            The core idea comes from research showing that LLM apps and tool-using agents can be steered by untrusted content they retrieve: webpages, documents, repo files, package metadata, tool outputs, and issue comments.
-          </p>
-        </div>
-        <div className="research-grid">
-          {researchLinks.map((item) => (
-            <a href={item.href} key={item.href} target="_blank" rel="noreferrer">
-              <span>{item.title}</span>
-              <strong>{item.paper}</strong>
-              <small>{item.detail}</small>
-            </a>
-          ))}
-        </div>
-      </section>
 
       <section className="flow-band">
         <div className="flow-step">

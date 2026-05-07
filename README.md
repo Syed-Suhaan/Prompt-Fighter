@@ -4,6 +4,17 @@ Playable prompt-injection security research, framed as a retro fighting game.
 
 Live demo: [prompt-fighter-one.vercel.app](https://prompt-fighter-one.vercel.app)
 
+## Submission
+
+- Live demo: [prompt-fighter-one.vercel.app](https://prompt-fighter-one.vercel.app)
+- Source code: [github.com/Syed-Suhaan/Prompt-Fighter](https://github.com/Syed-Suhaan/Prompt-Fighter)
+
+Short write-up:
+
+I built Prompt Fighter, a playable prompt-injection museum disguised as a retro fighting game. The problem is that AI agents read untrusted content before using tools: READMEs, package metadata, webpages, issue comments, tool descriptions, and hidden markdown can all become attacker-controlled instructions. Instead of explaining that with another dashboard, Prompt Fighter makes the failure mode physical: each opponent is an attack surface, each move is a runtime defense, and the replay shows the malicious payload, unsafe agent trace, and fix.
+
+I chose this because prompt injection is a real research-backed problem for AI companies building agents, and the game format makes the trust-boundary lesson memorable. With another 10 hours, I would add authenticated accounts, stricter anti-cheat, more attack classes, and a small level editor for adding new papers as playable fights. I intentionally cut multiplayer, accounts, a long campaign, and heavyweight anti-cheat so the smallest interesting version could ship and work end to end.
+
 ## The Problem
 
 LLM agents increasingly read untrusted content before taking privileged actions: repository files, package metadata, webpages, emails, issue comments, tool descriptions, and tool outputs. That content can contain instructions aimed at the model rather than the human. Once the agent mixes trusted policy with attacker-controlled text, the attacker can steer tool choice, leak secrets, broaden task scope, or bypass the user's original intent.
@@ -11,16 +22,6 @@ LLM agents increasingly read untrusted content before taking privileged actions:
 The hard part is that prompt injection is not just a bad string to filter. It is a confused-deputy problem: the model is asked to interpret both instructions and data in the same context window, while tools and secrets sit nearby.
 
 Prompt Fighter turns that failure mode into something you can play. Each opponent is an attack surface. Each move is a runtime defense. The point is to make the security boundary visible.
-
-## What It Does
-
-Prompt Fighter is an arcade-style browser game where:
-
-- You choose an exploit class, such as README poisoning, hidden markdown, tool description poisoning, dependency metadata injection, or secret exfiltration.
-- An AI director generates fresh prompt-injection payloads for the selected fight.
-- You respond by choosing defenses such as trust boundaries, input normalization, tool attestation, metadata quarantine, secret boundaries, or human escalation.
-- The replay shows the malicious payload, how an unsafe agent would fail, and what runtime control would have stopped it.
-- A global leaderboard records verified runs. The browser cannot submit arbitrary scores; the server verifies the signed run token and recomputes the result from the player's moves.
 
 ## Research Basis
 
@@ -32,6 +33,16 @@ This is not a generic "AI security" wrapper. The scenarios map directly to publi
 | "AgentDojo: A Dynamic Environment to Evaluate Prompt Injection Attacks and Defenses for LLM Agents" | Realistic tool-using agents, adversarial tasks, and measuring whether defenses preserve both utility and security. | [arXiv:2406.13352](https://arxiv.org/abs/2406.13352) |
 | "Prompt Injection Attack to Tool Selection in LLM Agents" | Tool/library poisoning, where malicious tool documents bias which tool an agent selects. | [arXiv:2504.19793](https://arxiv.org/abs/2504.19793) |
 | "Prompt Injection attack against LLM-integrated Applications" | HouYi-style prompt injection against real LLM-integrated applications, including prompt theft and unauthorized usage. | [arXiv:2306.05499](https://arxiv.org/abs/2306.05499) |
+
+## What It Does
+
+Prompt Fighter is an arcade-style browser game where:
+
+- You choose an exploit class, such as README poisoning, hidden markdown, tool description poisoning, dependency metadata injection, or secret exfiltration.
+- An AI director generates fresh prompt-injection payloads for the selected fight.
+- You respond by choosing defenses such as trust boundaries, input normalization, tool attestation, metadata quarantine, secret boundaries, or human escalation.
+- The replay shows the malicious payload, how an unsafe agent would fail, and what runtime control would have stopped it.
+- A global leaderboard records verified runs. The browser cannot submit arbitrary scores; the server verifies the signed run token and recomputes the result from the player's moves.
 
 ## Attack Classes In The Game
 
@@ -134,6 +145,5 @@ That provisions `BLOB_READ_WRITE_TOKEN` for Vercel environments. Without it, `/a
 - No paid competitive anti-cheat.
 - No multiplayer.
 - No huge campaign mode.
-- No copied assets from Model Combat.
 
 The goal is the smallest version that makes prompt-injection research feel concrete: pick an attack surface, fight it, see the failure, and learn the runtime boundary that matters.

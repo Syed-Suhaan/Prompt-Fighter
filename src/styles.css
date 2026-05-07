@@ -427,6 +427,14 @@ button:disabled {
   border-bottom: 1px solid var(--line);
 }
 
+.research-band-top {
+  padding-top: 26px;
+  padding-bottom: 24px;
+  background:
+    linear-gradient(90deg, rgba(104, 255, 141, 0.06), transparent 42%),
+    rgba(10, 10, 10, 0.38);
+}
+
 .section-intro h2,
 .screen-header h2 {
   margin: 10px 0 10px;
