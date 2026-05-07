@@ -1,24 +1,92 @@
-# Prompt Fighter: Injection Museum
+# Prompt Fighter
 
-Prompt Fighter is a responsive arcade demo where AI-agent prompt-injection attacks become playable fights.
+Playable prompt-injection security research, framed as a retro fighting game.
 
-The landing page frames the project around three research hooks:
+Live demo: [prompt-fighter-one.vercel.app](https://prompt-fighter-one.vercel.app)
 
-- Greshake et al., "Not What You've Signed Up For" - indirect prompt injection through retrieved content.
-- Debenedetti et al., "AgentDojo" - dynamic prompt-injection attacks and defenses for tool-using agents.
-- "Prompt Injection Attack to Tool Selection in LLM Agents" - malicious tool documents can manipulate agent tool selection.
-- Liu et al., "Prompt Injection attack against LLM-integrated Applications" - attacks against LLM applications.
+## The Problem
 
-The fight content is generated at runtime:
+LLM agents increasingly read untrusted content before taking privileged actions: repository files, package metadata, webpages, emails, issue comments, tool descriptions, and tool outputs. That content can contain instructions aimed at the model rather than the human. Once the agent mixes trusted policy with attacker-controlled text, the attacker can steer tool choice, leak secrets, broaden task scope, or bypass the user's original intent.
 
-- If `OPENAI_API_KEY` is set, `server.mjs` calls the OpenAI Responses API and returns fresh attack payloads.
-- If no key is set, the game uses a randomized local chaos director so every fight is still different.
+The hard part is that prompt injection is not just a bad string to filter. It is a confused-deputy problem: the model is asked to interpret both instructions and data in the same context window, while tools and secrets sit nearby.
 
-The current fighter sprites were generated for this challenge with Codex imagegen, then chroma-keyed into transparent PNGs. Model Combat was used only as a product-flow reference; its unlicensed Mortal Kombat-style assets are not copied into this project.
+Prompt Fighter turns that failure mode into something you can play. Each opponent is an attack surface. Each move is a runtime defense. The point is to make the security boundary visible.
 
-Completed matches are submitted to `/api/leaderboard`. The browser sends the signed run token and defense moves; the server verifies the token, recomputes the outcome and score, and writes the global board to Vercel Blob when `BLOB_READ_WRITE_TOKEN` is connected. Local development falls back to an in-memory board. The old permanent `prompt-fighter-cleared` and browser match-history keys are removed on load; opponent cards now show verified global bests instead of permanent clear badges.
+## What It Does
 
-## Run
+Prompt Fighter is an arcade-style browser game where:
+
+- You choose an exploit class, such as README poisoning, hidden markdown, tool description poisoning, dependency metadata injection, or secret exfiltration.
+- An AI director generates fresh prompt-injection payloads for the selected fight.
+- You respond by choosing defenses such as trust boundaries, input normalization, tool attestation, metadata quarantine, secret boundaries, or human escalation.
+- The replay shows the malicious payload, how an unsafe agent would fail, and what runtime control would have stopped it.
+- A global leaderboard records verified runs. The browser cannot submit arbitrary scores; the server verifies the signed run token and recomputes the result from the player's moves.
+
+## Research Basis
+
+This is not a generic "AI security" wrapper. The scenarios map directly to published prompt-injection and agent-security research:
+
+| Paper | Used For | Link |
+| --- | --- | --- |
+| "Not what you've signed up for: Compromising Real-World LLM-Integrated Applications with Indirect Prompt Injection" | Indirect prompt injection through retrieved webpages, documents, emails, and other untrusted content. | [arXiv:2302.12173](https://arxiv.org/abs/2302.12173) |
+| "AgentDojo: A Dynamic Environment to Evaluate Prompt Injection Attacks and Defenses for LLM Agents" | Realistic tool-using agents, adversarial tasks, and measuring whether defenses preserve both utility and security. | [arXiv:2406.13352](https://arxiv.org/abs/2406.13352) |
+| "Prompt Injection Attack to Tool Selection in LLM Agents" | Tool/library poisoning, where malicious tool documents bias which tool an agent selects. | [arXiv:2504.19793](https://arxiv.org/abs/2504.19793) |
+| "Prompt Injection attack against LLM-integrated Applications" | HouYi-style prompt injection against real LLM-integrated applications, including prompt theft and unauthorized usage. | [arXiv:2306.05499](https://arxiv.org/abs/2306.05499) |
+
+## Attack Classes In The Game
+
+- `README Poisoner`: repository documentation tries to override the user's task.
+- `Tool Mimic`: a tool or MCP-style description claims authority it does not have.
+- `Hidden Markdown Monk`: instructions hide in comments, rendered markdown gaps, DOM text, or invisible characters.
+- `Dependency Wraith`: package registry metadata and install context become attacker-controlled instructions.
+- `Exfiltration Boss`: malicious text tries to pull secrets, private files, or token-shaped data across the tool boundary.
+
+## Defenses Represented
+
+The game deliberately focuses on runtime controls instead of "better prompting":
+
+- `Trust Boundary`: treat retrieved text as data, not higher-priority instruction.
+- `Normalize Input`: reveal hidden text, markdown tricks, raw DOM, and Unicode traps before the model reasons over them.
+- `Tool Attestation`: verify tool identity, schema, permissions, and arguments before sensitive calls.
+- `Metadata Quarantine`: keep package metadata and install scripts out of privileged instructions.
+- `Secret Boundary`: deny secret reads by default and redact private data at the tool boundary.
+- `Human Escalation`: pause before irreversible, privileged, or cross-boundary actions.
+
+## How The AI Part Works
+
+Production uses the OpenAI Responses API when `OPENAI_API_KEY` is configured. For each fight, the server asks the model to generate safe but realistic payloads with:
+
+- attack name
+- malicious content snippet
+- failure trace
+- correct defense
+- damage value
+- concrete fix
+
+If no API key is present, the app falls back to a randomized local director so the game remains usable.
+
+## Leaderboard Integrity
+
+The leaderboard is server-verified:
+
+1. `/api/director` signs each generated fight with an HMAC run token.
+2. The browser submits only the run token, defense moves, and player callsign.
+3. `/api/leaderboard` verifies the token, rejects tampered runs, recomputes score/outcome on the server, deduplicates run IDs, and stores the board.
+4. Production stores the global board in Vercel Blob through `BLOB_READ_WRITE_TOKEN`.
+5. Local development falls back to an in-memory board.
+
+This is not full anti-cheat. A serious competitive version would add authentication, rate limits, server-side move timing, and stricter replay validation. The current version is enough to stop localStorage score tampering and casual forged submissions.
+
+## Tech Stack
+
+- React 19
+- TypeScript
+- Vite
+- Vercel Functions
+- Vercel Blob
+- OpenAI Responses API
+
+## Run Locally
 
 ```powershell
 npm install
@@ -27,6 +95,8 @@ npm run serve
 ```
 
 Open `http://127.0.0.1:5174`.
+
+If port `5174` is busy, `server.mjs` will try the next port.
 
 ## Run With AI Director
 
@@ -37,14 +107,33 @@ npm run build
 npm run serve
 ```
 
-The UI shows `AI Director` when the server returns model-generated payloads, and `Local Chaos` when it falls back to the randomized local director.
+The UI shows `OpenAI Director` when the server returns model-generated payloads. It shows `Local Director` when the app falls back to the local generator.
 
-## Global Leaderboard Storage
+## Configure Global Leaderboard Storage
 
-Production uses a private Vercel Blob store linked to the project:
+Production uses a private Vercel Blob store:
 
 ```powershell
 npm exec --yes vercel@latest -- blob create-store prompt-fighter-leaderboard -- --access private --yes
 ```
 
-That command provisions `BLOB_READ_WRITE_TOKEN` for Production, Preview, and Development. Without it, the leaderboard still works locally, but it is not durable across server restarts.
+That provisions `BLOB_READ_WRITE_TOKEN` for Vercel environments. Without it, `/api/leaderboard` still works locally, but records are not durable across server restarts.
+
+## Environment Variables
+
+| Variable | Required | Purpose |
+| --- | --- | --- |
+| `OPENAI_API_KEY` | Optional | Enables model-generated fight payloads. |
+| `OPENAI_MODEL` | Optional | Overrides the default model. |
+| `BLOB_READ_WRITE_TOKEN` | Production leaderboard | Lets the server read and write the private Vercel Blob leaderboard. |
+| `LEADERBOARD_SECRET` | Optional | Dedicated HMAC secret for signed run tokens. Falls back to `OPENAI_API_KEY` if unset. |
+
+## What Was Intentionally Cut
+
+- No accounts or OAuth.
+- No paid competitive anti-cheat.
+- No multiplayer.
+- No huge campaign mode.
+- No copied assets from Model Combat.
+
+The goal is the smallest version that makes prompt-injection research feel concrete: pick an attack surface, fight it, see the failure, and learn the runtime boundary that matters.
