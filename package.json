@@ -1,0 +1,24 @@
+{
+  "name": "prompt-fighter",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "serve": "node server.mjs",
+    "app": "npm run build && node server.mjs"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "typescript": "~6.0.2",
+    "vite": "^8.0.10"
+  },
+  "dependencies": {
+    "@vercel/blob": "^2.3.3",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6"
+  }
+}
